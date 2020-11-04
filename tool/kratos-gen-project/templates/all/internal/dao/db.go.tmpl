@@ -1,0 +1,23 @@
+package dao
+
+import (
+	"github.com/iwannay/kratos/pkg/conf/paladin"
+	"github.com/iwannay/kratos/pkg/database/orm"
+)
+
+func NewDB() (db *orm.Client, cf func(), err error) {
+	var (
+		cfg orm.Options
+		ct  paladin.TOML
+	)
+	if err = paladin.Get("db.toml").Unmarshal(&ct); err != nil {
+		return
+	}
+	if err = ct.Get("Client").UnmarshalTOML(&cfg); err != nil {
+		return
+	}
+	db = orm.New(&cfg)
+
+	cf = func() { db.Close() }
+	return
+}

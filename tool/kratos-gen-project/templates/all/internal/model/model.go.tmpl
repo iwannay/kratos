@@ -1,0 +1,16 @@
+package model
+
+type Kratos struct {
+	Hello string
+}
+
+type Article struct {
+	ID      int64  `json:"id" xorm:"autoincr 'id'"`
+	Title   string `json:"title" xorm:"title"`
+	Content string
+	Author  string
+}
+
+func (*Article) TableName() string {
+	return "articles"
+}

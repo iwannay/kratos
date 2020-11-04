@@ -1,0 +1,93 @@
+package service
+
+import (
+	"context"
+	"fmt"
+
+	pb "{{.ModPrefix}}{{.Name}}/api"
+	"{{.ModPrefix}}{{.Name}}/internal/dao"
+	"{{.ModPrefix}}{{.Name}}/internal/model"
+
+	"github.com/iwannay/kratos/pkg/conf/paladin"
+	"github.com/iwannay/kratos/pkg/ecode"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/wire"
+)
+
+var Provider = wire.NewSet(New, wire.Bind(new(pb.DemoServer), new(*Service)))
+
+// Service service.
+type Service struct {
+	ac  *paladin.Map
+	dao dao.Dao
+}
+
+// New new a service and return.
+func New(d dao.Dao) (s *Service, cf func(), err error) {
+	s = &Service{
+		ac:  &paladin.TOML{},
+		dao: d,
+	}
+	cf = s.Close
+	err = paladin.Watch("application.toml", s.ac)
+	return
+}
+
+// SayHello grpc demo func.
+func (s *Service) SayHello(ctx context.Context, req *pb.HelloReq) (reply *empty.Empty, err error) {
+	reply = new(empty.Empty)
+	fmt.Printf("hello %s", req.Name)
+	return
+}
+
+// SayHelloURL bm demo func.
+func (s *Service) Article(ctx context.Context, req *pb.ArticleReq) (reply *pb.ArticleDetail, err error) {
+	var art *model.Article
+	art, err = s.dao.Article(ctx, req.Id)
+	if err != nil {
+		return
+	}
+	if art == nil {
+		err = ecode.NothingFound
+		return
+	}
+
+	reply = &pb.ArticleDetail{
+		Id:      art.ID,
+		Title:   art.Title,
+		Content: art.Content,
+		Author:  art.Author,
+	}
+	return
+}
+
+func (s *Service) Articles(ctx context.Context, req *pb.ArticlesReq) (reply *pb.ArticlesResp, err error) {
+	ret, total, err := s.dao.Articles(ctx, int(req.Start), int(req.Limit))
+	if err != nil {
+		return
+	}
+	reply = &pb.ArticlesResp{
+		Total: total,
+	}
+
+	for _, art := range ret {
+		reply.List = append(reply.List, &pb.ArticleDetail{
+			Id:      art.ID,
+			Title:   art.Title,
+			Content: art.Content,
+			Author:  art.Author,
+		})
+	}
+	return
+}
+
+// Ping ping the resource.
+func (s *Service) Ping(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return &empty.Empty{}, s.dao.Ping(ctx)
+}
+
+// Close close the resource.
+func (s *Service) Close() {
+}
+

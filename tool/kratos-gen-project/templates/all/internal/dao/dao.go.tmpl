@@ -1,0 +1,80 @@
+package dao
+
+import (
+	"context"
+	"time"
+
+	"{{.ModPrefix}}{{.Name}}/api"
+	"{{.ModPrefix}}{{.Name}}/internal/model"
+
+	"github.com/iwannay/kratos/pkg/conf/paladin"
+	"github.com/iwannay/kratos/pkg/database/orm"
+	"github.com/iwannay/kratos/pkg/net/rpc/warden"
+	"github.com/iwannay/kratos/pkg/sync/pipeline/fanout"
+	xtime "github.com/iwannay/kratos/pkg/time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/google/wire"
+)
+
+var Provider = wire.NewSet(New, NewDB, NewRedis)
+
+//go:generate kratos tool genbts
+// Dao dao interface
+type Dao interface {
+	Close()
+	Ping(ctx context.Context) (err error)
+	// bts: -nullcache=&model.Article{ID:-1} -check_null_code=$!=nil&&$.ID==-1
+	Article(c context.Context, id int64) (*model.Article, error)
+	Articles(c context.Context, start, limit int) ([]*model.Article, int64, error)
+}
+
+// dao dao.
+type dao struct {
+	db         *orm.Client
+	redis      *redis.ClusterClient
+	demoClient api.DemoClient
+	cache      *fanout.Fanout
+	demoExpire int32
+}
+
+// New new a dao and return.
+func New(r *redis.ClusterClient, db *orm.Client) (d Dao, cf func(), err error) {
+	return newDao(r, db)
+}
+
+func newDao(r *redis.ClusterClient, db *orm.Client) (d *dao, cf func(), err error) {
+	var cfg struct {
+		DemoExpire xtime.Duration
+	}
+	if err = paladin.Get("application.toml").UnmarshalTOML(&cfg); err != nil {
+		return
+	}
+
+	d = &dao{
+		db:         db,
+		redis:      r,
+		cache:      fanout.New("cache"),
+		demoExpire: int32(time.Duration(cfg.DemoExpire) / time.Second),
+	}
+	cf = d.Close
+	var clientCfg warden.ClientConfig
+
+	if err = paladin.Get("grpc.toml").UnmarshalTOML(&clientCfg); err != nil {
+		return
+	}
+	// if d.demoClient, err = api.NewClient(&warden.ClientConfig{}); err != nil {
+	// 	return
+	// }
+	return
+}
+
+// Close close the resource.
+func (d *dao) Close() {
+	d.cache.Close()
+}
+
+// Ping ping the resource.
+func (d *dao) Ping(ctx context.Context) (err error) {
+	return nil
+}

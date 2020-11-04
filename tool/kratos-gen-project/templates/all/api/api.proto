@@ -1,0 +1,59 @@
+// 定义项目 API 的 proto 文件 可以同时描述 gRPC 和 HTTP API
+// protobuf 文件参考:
+//  - https://developers.google.com/protocol-buffers/
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+// package 命名使用 {appid}.{version} 的方式, version 形如 v1, v2 ..
+package demo.service.v1;
+
+// NOTE: 最后请删除这些无用的注释 (゜-゜)つロ
+
+option go_package = "api";
+option (gogoproto.goproto_getters_all) = false;
+
+service Demo {
+  rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
+  rpc SayHello(HelloReq) returns (.google.protobuf.Empty);
+  rpc Article(ArticleReq) returns (ArticleDetail) {
+    option (google.api.http) = {
+      get: "/kratos-demo/article"
+    };
+  };
+
+  rpc Articles(ArticlesReq) returns (ArticlesResp) {
+    option (google.api.http) = {
+      get: "/kratos-demo/articles"
+    };
+  };
+
+}
+
+message HelloReq {
+  string name = 1 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
+}
+
+
+message ArticleReq {
+  int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+}
+
+message ArticleDetail {
+  int64 id = 1 [(gogoproto.jsontag) = 'id'];
+  string title = 2;
+  string content = 3;
+  string author = 4;
+}
+
+message ArticlesReq {
+  int64 start = 1 [(gogoproto.moretags) = 'form:"start"'];
+  int64 limit = 2 [(gogoproto.moretags) = 'form:"limit"'];
+}
+
+message ArticlesResp {
+  repeated ArticleDetail list = 1;
+  int64 total = 2;
+}

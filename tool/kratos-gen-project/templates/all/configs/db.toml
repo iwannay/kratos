@@ -1,0 +1,3 @@
+[Client]
+	driver = "mysql"
+	dsn = "root:root@tcp(localhost:3306)/kratos_demo?charset=utf8"

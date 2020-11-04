@@ -1,0 +1,33 @@
+package dao
+
+import (
+	"context"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/iwannay/kratos/pkg/cache/rdb"
+	"github.com/iwannay/kratos/pkg/conf/paladin"
+	"github.com/iwannay/kratos/pkg/log"
+)
+
+func NewRedis() (r *redis.ClusterClient, cf func(), err error) {
+	var (
+		cfg rdb.CustomOptions
+		ct  paladin.Map
+	)
+	if err = paladin.Get("redis.toml").Unmarshal(&ct); err != nil {
+		return
+	}
+	if err = ct.Get("Client").UnmarshalTOML(&cfg); err != nil {
+		return
+	}
+	r = rdb.NewClusterClient(&cfg)
+	cf = func() { r.Close() }
+	return
+}
+
+func (d *dao) PingRedis(ctx context.Context) (err error) {
+	if err = d.redis.Ping(ctx).Err(); err != nil {
+		log.Error("conn.Set(PING) error(%v)", err)
+	}
+	return
+}
