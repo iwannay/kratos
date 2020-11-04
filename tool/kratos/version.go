@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"runtime"
 	"text/template"
+	"time"
 )
 
 var (
 	// Version is version
-	Version = "v0.5.0"
+	Version = "latest"
 	// BuildTime is BuildTime
-	BuildTime = "2020/4/30"
+	BuildTime = time.Now().Format("2006/01/02")
 )
 
 // VersionOptions include version
