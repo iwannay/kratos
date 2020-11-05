@@ -1,0 +1,25 @@
+package dao
+
+import (
+	"context"
+	"{{.ModPrefix}}{{.Name}}/internal/model"
+)
+
+func (d *dao) RawArticle(ctx context.Context, id int64) (art *model.Article, err error) {
+	var has bool
+	art = &model.Article{}
+	has, err = d.db.Where("id=?", id).Get(art)
+	if err != nil {
+		return
+	}
+	if !has {
+		art = nil
+	}
+	return
+}
+
+func (d *dao) Articles(c context.Context, start, limit int) (arts []*model.Article, total int64, err error) {
+	arts = make([]*model.Article, 0)
+	total, err = d.db.Limit(limit, start).FindAndCount(&arts)
+	return
+}

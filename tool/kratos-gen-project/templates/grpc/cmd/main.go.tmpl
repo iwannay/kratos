@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"{{.ModPrefix}}{{.Name}}/internal/di"
+
 	"github.com/iwannay/kratos/pkg/conf/paladin"
 	"github.com/iwannay/kratos/pkg/log"
 )
@@ -18,6 +19,17 @@ func main() {
 	defer log.Close()
 	log.Info("{{.Name}} start")
 	paladin.Init()
+
+	// 当使用命令行初始化apollo时需要使用以下参数
+	// flag.StringVar(&confAppID, "apollo.appid", "", "apollo app id")
+	// flag.StringVar(&confCluster, "apollo.cluster", "", "apollo cluster")
+	// flag.StringVar(&confCacheDir, "apollo.cachedir", "/tmp", "apollo cache dir")
+	// flag.StringVar(&confMetaAddr, "apollo.metaaddr", "", "apollo meta server addr, e.g. localhost:8080")
+	// flag.StringVar(&confNamespaces, "apollo.namespaces", "", "subscribed apollo namespaces, comma separated, e.g. app.yml,mysql.yml")
+	// if err := paladin.Init(apollo.PaladinDriverApollo); err != nil {
+	// 	panic(err)
+	// }
+
 	_, closeFunc, err := di.InitApp()
 	if err != nil {
 		panic(err)

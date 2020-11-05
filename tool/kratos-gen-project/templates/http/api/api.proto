@@ -18,17 +18,42 @@ option (gogoproto.goproto_getters_all) = false;
 service Demo {
   rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
   rpc SayHello(HelloReq) returns (.google.protobuf.Empty);
-  rpc SayHelloURL(HelloReq) returns (HelloResp) {
+  rpc Article(ArticleReq) returns (ArticleDetail) {
     option (google.api.http) = {
-      get: "/demo/say_hello"
+      get: "/kratos-demo/article"
     };
   };
+
+  rpc Articles(ArticlesReq) returns (ArticlesResp) {
+    option (google.api.http) = {
+      get: "/kratos-demo/articles"
+    };
+  };
+
 }
 
 message HelloReq {
   string name = 1 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
 }
 
-message HelloResp {
-  string Content = 1 [(gogoproto.jsontag) = 'content'];
+
+message ArticleReq {
+  int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+}
+
+message ArticleDetail {
+  int64 id = 1 [(gogoproto.jsontag) = 'id'];
+  string title = 2;
+  string content = 3;
+  string author = 4;
+}
+
+message ArticlesReq {
+  int64 start = 1 [(gogoproto.moretags) = 'form:"start"'];
+  int64 limit = 2 [(gogoproto.moretags) = 'form:"limit"'];
+}
+
+message ArticlesResp {
+  repeated ArticleDetail list = 1;
+  int64 total = 2;
 }

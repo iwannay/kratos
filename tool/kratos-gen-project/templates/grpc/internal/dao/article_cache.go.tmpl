@@ -1,0 +1,42 @@
+package dao
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"{{.ModPrefix}}{{.Name}}/internal/model"
+	"time"
+
+	"github.com/iwannay/kratos/pkg/log"
+	"github.com/go-redis/redis/v8"
+)
+
+func (d *dao) CacheArticle(ctx context.Context, id int64) (res *model.Article, err error) {
+	var bts []byte
+	res = &model.Article{}
+	bts, err = d.redis.Get(ctx, fmt.Sprint("serviceName:art:", id)).Bytes()
+	if err == redis.Nil {
+		res = nil
+		err = nil
+		return
+	}
+
+	if err != nil {
+		log.Errorc(ctx, "CacheArticle failed %v", err)
+		return
+	}
+	err = json.Unmarshal(bts, res)
+	return
+}
+
+func (d *dao) AddCacheArticle(ctx context.Context, id int64, miss *model.Article) {
+	bts, err := json.Marshal(miss)
+	if err != nil {
+		log.Errorc(ctx, "AddCacheArticle marshal failed %v", err)
+		return
+	}
+	if err := d.redis.Set(ctx, fmt.Sprint("serviceName:art:", id), bts, 3600*time.Second).Err(); err != nil {
+		log.Errorc(ctx, "AddCacheArticle failed %v", err)
+	}
+
+}
