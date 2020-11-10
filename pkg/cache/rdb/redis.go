@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -32,5 +33,8 @@ func NewClusterClient(opts *CustomOptions) *redis.ClusterClient {
 	cos.DialTimeout = opts.DialTimeout * time.Second
 	rc := redis.NewClusterClient(&cos)
 	rc.AddHook(TracingHook{})
+	if err := rc.Ping(context.TODO()).Err(); err != nil {
+		panic(err)
+	}
 	return rc
 }
