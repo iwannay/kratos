@@ -59,14 +59,25 @@ func newDao(r *redis.ClusterClient, db *orm.Client) (d *dao, cf func(), err erro
 	}
 	cf = d.Close
 	var clientCfg warden.ClientConfig
-
-	if err = paladin.Get("grpc.toml").UnmarshalTOML(&clientCfg); err != nil {
+	var ct paladin.Map
+	if err = paladin.Get("grpc.toml").Unmarshal(&ct); err != nil {
 		return
 	}
-	// if d.demoClient, err = api.NewClient(&warden.ClientConfig{}); err != nil {
+	if err = ct.Get("Client").UnmarshalTOML(&clientCfg); err != nil {
+		return
+	}
+	// if d.demoClient, err = hello1.NewClient(&warden.ClientConfig{}); err != nil {
 	// 	return
 	// }
 	return
+}
+
+func (d *dao) DB() *orm.Client {
+	return d.db
+}
+
+func (d *dao) RDB() *redis.ClusterClient {
+	return d.redis
 }
 
 // Close close the resource.

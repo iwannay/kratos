@@ -1,16 +1,22 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"{{.ModPrefix}}{{.Name}}/api"
 	"{{.ModPrefix}}{{.Name}}/internal/di"
 
+	"github.com/iwannay/kratos/pkg/conf/env"
 	"github.com/iwannay/kratos/pkg/conf/paladin"
 	"github.com/iwannay/kratos/pkg/log"
+	"github.com/iwannay/kratos/pkg/naming"
+	"github.com/iwannay/kratos/pkg/naming/etcd"
+	"github.com/iwannay/kratos/pkg/net/rpc/warden/resolver"
 )
 
 func main() {
@@ -30,6 +36,14 @@ func main() {
 	// 	panic(err)
 	// }
 
+	// NOTE: 注意这段代码，表示要使用etcd进行服务发现
+	// NOTE: 在启动应用时，可以通过flag(-etcd.endpoints) 或者 环境配置(ETCD_ENDPOINTS)指定etcd节点
+	// NOTE: 如果需要自己指定配置时 需要同时设置DialTimeout 与 DialOptions: []grpc.DialOption{grpc.WithBlock()}
+	resolver.Register(etcd.Builder(nil))
+	// 这里需要填入真实的ip和端口
+	// 服务注册
+	cancel := RegisterSvc("localhost", "9000")
+
 	_, closeFunc, err := di.InitApp()
 	if err != nil {
 		panic(err)
@@ -42,6 +56,7 @@ func main() {
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
 			closeFunc()
+			cancel()
 			log.Info("{{.Name}} exit")
 			time.Sleep(time.Second)
 			return
@@ -50,4 +65,28 @@ func main() {
 			return
 		}
 	}
+}
+
+func RegisterSvc(ip string, port string) context.CancelFunc {
+	hn, _ := os.Hostname()
+	dis, err := etcd.New(nil)
+	if err != nil {
+		panic(err)
+	}
+	ins := &naming.Instance{
+		Zone:     env.Zone,
+		Env:      env.DeployEnv,
+		AppID:    api.AppID,
+		Hostname: hn,
+		Addrs: []string{
+			"grpc://" + ip + ":" + port,
+		},
+	}
+
+	cancel, err := dis.Register(context.Background(), ins)
+	if err != nil {
+		panic(err)
+	}
+
+	return cancel
 }
