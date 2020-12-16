@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	toolDoc = "https://go-kratos.github.io/kratos/#/kratos-tool"
+	toolDoc = "https://iwannay.github.io/kratos/#/kratos-tool"
 )
 
 // Tool is kratos tool.
