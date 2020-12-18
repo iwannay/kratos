@@ -266,8 +266,8 @@ github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/otokaze/mock v0.0.0-20190125081256-8282b7a7c7c3 h1:zjmNboC3QFuMdJSaZJ7Qvi3HUxWXPdj7wb3rc4jH5HI=
 github.com/otokaze/mock v0.0.0-20190125081256-8282b7a7c7c3/go.mod h1:pLR8n2aimFxvvDJ6n8JuQWthMGezCYMjuhlaTjPTZf0=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
-github.com/philchia/agollo v0.0.0-20190728085453-a95533fccea3 h1:e/WwwXpp+h9CtbiwSdDxrgq6ymvrvLH/P+kS+8qq4v8=
-github.com/philchia/agollo v0.0.0-20190728085453-a95533fccea3/go.mod h1:EXNdWdQkS+QBi0nb/Xm+sBBuQ1PM7/NIPr1JDzOlt8A=
+github.com/philchia/agollo/v4 v4.1.1 h1:6AFFJ8+J1Ru5SPclUyMWLUmd62Ak/1fqZrEthiL6UeE=
+github.com/philchia/agollo/v4 v4.1.1/go.mod h1:SBdQmfqqu/XCWJ1MDzYcCL3X+p3VJ+uQBy0nxxqjexg=
 github.com/pierrec/lz4 v0.0.0-20190327172049-315a67e90e41/go.mod h1:3/3N9NVKO0jef7pBehbT1qWhCMrIgbYNnFAZCqQ5LRc=
 github.com/pierrec/lz4 v1.0.2-0.20190131084431-473cd7ce01a1/go.mod h1:3/3N9NVKO0jef7pBehbT1qWhCMrIgbYNnFAZCqQ5LRc=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

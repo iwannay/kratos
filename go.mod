@@ -37,7 +37,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/openzipkin/zipkin-go v0.2.1
 	github.com/otokaze/mock v0.0.0-20190125081256-8282b7a7c7c3
-	github.com/philchia/agollo v0.0.0-20190728085453-a95533fccea3
+	github.com/philchia/agollo/v4 v4.1.1
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/procfs v0.0.11 // indirect

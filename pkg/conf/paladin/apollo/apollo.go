@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/philchia/agollo"
+	"github.com/philchia/agollo/v4"
 
 	"github.com/iwannay/kratos/pkg/conf/paladin"
 )
@@ -51,7 +51,7 @@ func (aw *apolloWatcher) Handle(event paladin.Event) {
 
 // apollo is apollo config client.
 type apollo struct {
-	client   *agollo.Client
+	client   agollo.Client
 	values   *paladin.Map
 	wmu      sync.RWMutex
 	watchers map[*apolloWatcher]struct{}
@@ -149,7 +149,7 @@ func (ad *apolloDriver) new(conf *Config) (paladin.Client, error) {
 		Cluster:        conf.Cluster,
 		NameSpaceNames: conf.Namespaces, // these namespaces will be subscribed at init
 		CacheDir:       conf.CacheDir,
-		IP:             conf.MetaAddr,
+		MetaAddr:       conf.MetaAddr,
 	})
 	err := client.Start()
 	if err != nil {
@@ -184,7 +184,7 @@ func (a *apollo) loadValues(keys []string) (values map[string]*paladin.Value, er
 
 // loadValue load value from apollo namespace content to value
 func (a *apollo) loadValue(key string) (*paladin.Value, error) {
-	content := a.client.GetNameSpaceContent(key, defaultValue)
+	content := a.client.GetContent(agollo.WithNamespace(key))
 	return paladin.NewValue(content, content), nil
 }
 
@@ -224,15 +224,11 @@ func (a *apollo) reloadValue(key string) (err error) {
 
 // apollo config daemon to watch remote apollo notifications
 func (a *apollo) watchproc(keys []string) {
-	events := a.client.WatchUpdate()
-	for {
-		select {
-		case event := <-events:
-			if err := a.reloadValue(event.Namespace); err != nil {
-				log.Printf("paladin: load key: %s error: %s, skipped", event.Namespace, err)
-			}
+	a.client.OnUpdate(func(event *agollo.ChangeEvent) {
+		if err := a.reloadValue(event.Namespace); err != nil {
+			log.Printf("paladin: load key: %s error: %s, skipped", event.Namespace, err)
 		}
-	}
+	})
 }
 
 // Get return value by key.
