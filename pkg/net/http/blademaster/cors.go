@@ -111,10 +111,8 @@ func WithMaxAge(duration time.Duration) SetConfig {
 func CORS(allowOriginHosts []string, opts ...SetConfig) HandlerFunc {
 	config := getDefaultCors()
 
-	if len(opts) != 0 {
-		for _,opt := range opts {
-			opt(config)
-		}
+	for _,opt := range opts {
+		opt(config)
 	}
 	config.AllowOriginFunc = func(origin string) bool {
 		for _, host := range allowOriginHosts {
