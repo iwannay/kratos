@@ -73,21 +73,29 @@ func (c *CORSConfig) Validate() error {
 	return nil
 }
 
-// CORS returns the location middleware with default configuration.
-func CORS(allowOriginHosts []string) HandlerFunc {
+func getDefaultCors() *CORSConfig{
 	config := &CORSConfig{
 		AllowMethods:     []string{"GET", "POST"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           time.Duration(0),
-		AllowOriginFunc: func(origin string) bool {
-			for _, host := range allowOriginHosts {
-				if strings.HasSuffix(strings.ToLower(origin), host) {
-					return true
-				}
+	}
+	return config
+}
+
+// CORS returns the location middleware with default configuration.
+func CORS(allowOriginHosts []string, configs ...*CORSConfig) HandlerFunc {
+	config := getDefaultCors()
+	if len(configs) != 0 {
+		config = configs[0]
+	}
+	config.AllowOriginFunc = func(origin string) bool {
+		for _, host := range allowOriginHosts {
+			if strings.HasSuffix(strings.ToLower(origin), host) {
+				return true
 			}
-			return false
-		},
+		}
+		return false
 	}
 	return newCORS(config)
 }
