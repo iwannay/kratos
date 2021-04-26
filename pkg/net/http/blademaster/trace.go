@@ -1,10 +1,13 @@
 package blademaster
 
 import (
+	"context"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptrace"
 	"strconv"
+	"time"
 
 	"github.com/iwannay/kratos/pkg/net/metadata"
 	"github.com/iwannay/kratos/pkg/net/trace"
@@ -66,10 +69,19 @@ type TraceTransport struct {
 	// The actual RoundTripper to use for the request. A nil
 	// RoundTripper defaults to http.DefaultTransport.
 	http.RoundTripper
+
+	connStart time.Time
+	connEnd   time.Time
+	reqStart  time.Time
+	reqEnd    time.Time
 }
 
 // RoundTrip implements the RoundTripper interface
 func (t *TraceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.reqStart = time.Now()
+	defer func() {
+		t.reqEnd = time.Now()
+	}()
 	rt := t.RoundTripper
 	if rt == nil {
 		rt = http.DefaultTransport
@@ -114,6 +126,27 @@ func (t *TraceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		resp.Body = &closeTracker{resp.Body, tr}
 	}
 	return resp, err
+}
+
+func (client *Client) dialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	client.transport.connStart = time.Now()
+	defer func() {
+		client.transport.connEnd = time.Now()
+	}()
+	cn, err := client.dialer.DialContext(ctx, network, addr)
+	return cn, err
+}
+
+func (client *Client) ReqDuration() time.Duration {
+	return client.Duration() - client.ConnDuration()
+}
+
+func (client *Client) ConnDuration() time.Duration {
+	return client.transport.connEnd.Sub(client.transport.connStart)
+}
+
+func (client *Client) Duration() time.Duration {
+	return client.transport.reqEnd.Sub(client.transport.reqStart)
 }
 
 type clientTracer struct {

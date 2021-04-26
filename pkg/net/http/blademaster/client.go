@@ -56,7 +56,7 @@ type Client struct {
 	conf      *ClientConfig
 	client    *xhttp.Client
 	dialer    *net.Dialer
-	transport xhttp.RoundTripper
+	transport *TraceTransport
 
 	urlConf  map[string]*ClientConfig
 	hostConf map[string]*ClientConfig
@@ -74,7 +74,7 @@ func NewClient(c *ClientConfig) *Client {
 	}
 
 	originTransport := &xhttp.Transport{
-		DialContext:     client.dialer.DialContext,
+		DialContext:     client.dialContext,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
@@ -100,7 +100,7 @@ func NewClient(c *ClientConfig) *Client {
 
 // SetTransport set client transport
 func (client *Client) SetTransport(t xhttp.RoundTripper) {
-	client.transport = t
+	client.transport = &TraceTransport{RoundTripper: t}
 	client.client.Transport = t
 }
 
@@ -218,9 +218,8 @@ func (client *Client) Raw(c context.Context, req *xhttp.Request, v ...string) (b
 	}
 	defer client.onBreaker(brk, &err)
 	// stat
-	now := time.Now()
 	defer func() {
-		_metricClientReqDur.Observe(int64(time.Since(now)/time.Millisecond), uri, req.Method)
+		_metricClientReqDur.Observe(int64(client.Duration()/time.Millisecond), uri, req.Method)
 		if code != "" {
 			_metricClientReqCodeTotal.Inc(uri, req.Method, code)
 		}
@@ -259,6 +258,9 @@ func (client *Client) Raw(c context.Context, req *xhttp.Request, v ...string) (b
 	if resp, err = client.client.Do(req); err != nil {
 		err = pkgerr.Wrapf(err, "host:%s, url:%s", req.URL.Host, realURL(req))
 		code = "failed"
+		if strings.Contains(err.Error(), "context deadline exceeded") {
+			code = "timeout"
+		}
 		return
 	}
 	defer resp.Body.Close()
