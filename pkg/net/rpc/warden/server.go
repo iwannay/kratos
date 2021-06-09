@@ -192,6 +192,33 @@ func NewServer(conf *ServerConfig, opt ...grpc.ServerOption) (s *Server) {
 	return
 }
 
+// NewServerWithoutLimiter returns a new blank Server instance with a default server interceptor.
+func NewServerWithoutLimiter(conf *ServerConfig, opt ...grpc.ServerOption) (s *Server) {
+	if conf == nil {
+		if !flag.Parsed() {
+			fmt.Fprint(os.Stderr, "[warden] please call flag.Parse() before Init warden server, some configure may not effect\n")
+		}
+		conf = parseDSN(_grpcDSN)
+	} else {
+		fmt.Fprintf(os.Stderr, "[warden] config is Deprecated, argument will be ignored. please use -grpc flag or GRPC env to configure warden server.\n")
+	}
+	s = new(Server)
+	if err := s.SetConfig(conf); err != nil {
+		panic(errors.Errorf("warden: set config failed!err: %s", err.Error()))
+	}
+	keepParam := grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionIdle:     time.Duration(s.conf.IdleTimeout),
+		MaxConnectionAgeGrace: time.Duration(s.conf.ForceCloseWait),
+		Time:                  time.Duration(s.conf.KeepAliveInterval),
+		Timeout:               time.Duration(s.conf.KeepAliveTimeout),
+		MaxConnectionAge:      time.Duration(s.conf.MaxLifeTime),
+	})
+	opt = append(opt, keepParam, grpc.UnaryInterceptor(s.interceptor))
+	s.server = grpc.NewServer(opt...)
+	s.Use(s.recovery(), s.handle(), serverLogging(conf.LogFlag), s.stats(), s.validate())
+	return
+}
+
 // SetConfig hot reloads server config
 func (s *Server) SetConfig(conf *ServerConfig) (err error) {
 	if conf == nil {
