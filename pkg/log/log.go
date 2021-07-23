@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/iwannay/kratos/pkg/conf/env"
@@ -42,6 +43,9 @@ type Config struct {
 	Module map[string]int32
 	// Filter tell log handler which field are sensitive message, use * instead.
 	Filter []string
+
+	// IgnorePath 忽略的部分路径例：`/\S+/v2-9[0-9\-]*/`
+	IgnorePath []string
 }
 
 // metricErrCount prometheus error counter.
@@ -72,13 +76,14 @@ func init() {
 }
 
 var (
-	_v        int
-	_stdout   bool
-	_dir      string
-	_agentDSN string
-	_filter   logFilter
-	_module   = verboseModule{}
-	_noagent  bool
+	_v          int
+	_stdout     bool
+	_dir        string
+	_agentDSN   string
+	_filter     logFilter
+	_module     = verboseModule{}
+	_noagent    bool
+	_ignorePath map[int]*regexp.Regexp
 )
 
 // addFlag init log from dsn.
@@ -133,6 +138,12 @@ func Init(conf *Config) {
 	}
 	if conf.Dir != "" {
 		hs = append(hs, NewFile(conf.Dir, conf.FileBufferSize, conf.RotateSize, conf.MaxLogFile))
+	}
+	if conf.IgnorePath != nil && len(conf.IgnorePath) > 0 {
+		_ignorePath = make(map[int]*regexp.Regexp)
+		for i, v := range conf.IgnorePath {
+			_ignorePath[i] = regexp.MustCompile(v)
+		}
 	}
 	h = newHandlers(conf.Filter, hs...)
 	c = conf
