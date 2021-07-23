@@ -51,7 +51,7 @@ func NewFile(dir string, bufferSize, rotateSize int64, maxLogFile int) *FileHand
 		return w
 	}
 	handler := &FileHandler{
-		render: newPatternRender("[%D %T] [%L] [%S] %M"),
+		render: newPatternRender("%D %T [%L] %f - %M"),
 	}
 	for idx, name := range _fileNames {
 		handler.fws[idx] = newWriter(name)
