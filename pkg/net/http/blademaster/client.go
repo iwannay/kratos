@@ -74,7 +74,7 @@ func NewClient(c *ClientConfig) *Client {
 	}
 
 	originTransport := &xhttp.Transport{
-		DialContext:     client.dialContext,
+		DialContext:     client.DialContext,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
