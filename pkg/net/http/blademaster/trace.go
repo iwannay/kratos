@@ -128,7 +128,7 @@ func (t *TraceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-func (client *Client) dialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (client *Client) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	client.transport.connStart = time.Now()
 	defer func() {
 		client.transport.connEnd = time.Now()
