@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const defaultPattern = "%L %d-%T %f %M"
+const defaultPattern = "%D %T [%L] %f - %M"
 
 var _defaultStdout = NewStdout()
 

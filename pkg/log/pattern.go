@@ -100,6 +100,12 @@ func keyFactory(key string) func(map[string]interface{}) string {
 	return func(d map[string]interface{}) string {
 		if v, ok := d[key]; ok {
 			if s, ok := v.(string); ok {
+				if key != "source" || _ignorePath == nil || len(_ignorePath) <= 0 {
+					return s
+				}
+				for _, v := range _ignorePath {
+					s = v.ReplaceAllString(s, "")
+				}
 				return s
 			}
 			return fmt.Sprint(v)
